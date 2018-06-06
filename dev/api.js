@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const Blockchain = require('./blockchain');
 const uuid = require('uuid/v1');
+const port = process.argv[2];//taking in argument from the terminal and running node number as specified by the external argument
 const nodeAddress = uuid().split('-').join('');
 const bitcoin = new Blockchain();
 
@@ -35,6 +36,6 @@ app.get('/mine',function(req,res){
 	});
 });
 
-app.listen(3000,function(){
-	console.log('port open');
+app.listen(port,function(){
+	console.log(`port open on port ${port}`);
 })
