@@ -73,12 +73,25 @@ app.post('/register-and-breadcast-node',function(req,res){
 // register a node with the network. The other nodes of the network receive the data at this point
 app.post('/register-node',function(req,res){
 	const newNodeUrl = req.body.newNodeUrl;
-	bitcoin.networkNodes.push(newNodeUrl);
+	const nodeNotAlreadyPresent = bitcoin.networkNodes.indexOf(newNodeUrl) == -1;
+	const notCurrentNode = bitcoin.currentNodeUrl !== newNodeUrl;//checking if the newNodeUrl is actually the current node that we are on
+	if(nodeNotAlreadyPresent && notCurrentNode) bitcoin.networkNodes.push(newNodeUrl);	
+	res.json({note: 'New node registered with network.'});
 });
 
 //the new node that we are registering gets the other nodes data at this 
+//this endpoint is only hit on the new node that we are registering on the network
 app.post('/register-nodes-bulk',function(req,res){
-
+	const allNetworkNodes = req.body.allNetworkNodes;//this is an array of all the network nodeUrls that are already in our blockchain network
+	allNetworkNodes.forEach(networkNodeUrl() => {
+		const nodeNotAlreadyPresent = bitcoin.networkNodes.indexOf(networkNodeUrl) == -1;//if node not already present in the array
+		const notCurrentNode = bitcoin.currentNodeUrl !== networkNodeUrl;
+		if(nodeNotAlreadyPresent && notCurrentNode)
+		{
+			bitcoin.networkNodes.push(networkNodeUrl); //looping through all the urls in the array and registering it with the new node
+		}
+	});
+	res.json( note : 'Bulk register complete.')
 });
 app.listen(port,function(){
 	console.log(`port open on port ${port}`);
