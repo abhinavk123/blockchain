@@ -34,8 +34,8 @@ Blockchain.prototype.createNewTransaction = function(amount, sender, recepient) 
 	const newTransaction = {
 		amount : amount,
 		sender : sender,
-		recepient :recepient
-		transactionId : uuid().split('-').join('')//gives a unique id for every new transaction that we make
+		recepient :recepient,
+		transactionId : uuid().split('-').join('')/*gives a unique id for every new transaction that we make*/
 	};
 
 	return newTransaction;
@@ -66,5 +66,31 @@ Blockchain.prototype.proofOfWork = function(previousBlockHash, currentBlockData)
 
 	return nonce;//returning the suitable nonce
 }
+
+Blockchain.prototype.chainIsValid = function(blockchain){
+
+	let validChain = true;
+	//for every block in the blockchain length
+	for(var i=1;i<blockchain.length;i++){
+		const currentBlock = blockchain[i];
+		const previousBlock = blockchain[i-1];
+		const blockHash = this.hashBlock(previousBlock['hash'],{transactions:currentBlock['transactions'],index:currentBlock['index']},currentBlock['nonce']);//finding out the hash of a block
+		if(blockHash.substring(0,4)!=='0000')//checking the hash of the block starts with 4 zeros
+			validChain = false;
+		//chain is not valid
+		if(currentBlock['previousBlockHash']!== previousBlock['hash']){
+			validChain = false;
+		}
+	};
+	//the code below check if the genesis block in the chain is valid or not
+	const genesisBlock = blockchain[0];
+	const correctNonce = genesisBlock['nonce'] ===100;
+	const correctPreviousBlockHash = genesisBlock['previousBlockHash']==='0';
+	const correctHash = genesisBlock['hash'] ==='0';
+	const correctTransaction = genesisBlock['transactions'].length===0;
+
+	if(!correctNonce || !correctPreviousBlockHash || !correctHash || !correctTransaction) validChain=false; 
+	return validChain;
+};
 
 module.exports = Blockchain;//exporting constructer function so it can be tested in test.js

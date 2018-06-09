@@ -27,7 +27,7 @@ app.post('/transaction/broadcast',function(req,res){
 
 	const requestPromises = [];
 	bitcoin.networkNodes.forEach(networkNodeUrl => {
-		const = requestOptions{
+		const requestOptions = {
 			uri:networkNodeUrl +'/transaction',
 			method:'POST',
 			body:newTransaction,
@@ -54,7 +54,7 @@ app.get('/mine',function(req,res){
 	const nonce = bitcoin.proofOfWork(previousBlockHash,currentBlockData);
 	const blockHash = bitcoin.hashBlock(previousBlockHash,currentBlockData,nonce);
 	const newBlock = bitcoin.createNewBlock(nonce, previousBlockHash,blockHash);
-	//bitcoin.createNewTransaction(12.5,"00",nodeAddress);//sending a reward of 12.5 bitcoin for completing the mining process, to the recepient address nodeAdress
+	//bitcoin.createNewTransaction(12.5,"00",nodeAddress);//sending a reward of 12.5 bitcoin for completing the mining process, to the recepient address nodeAddress
 
 	const requestPromises = [];
 	//broadcasting our newly mined block to all the other nodes in the network(as an attempt to make the network synchronous)
@@ -76,7 +76,7 @@ app.get('/mine',function(req,res){
 			body:{//mining reward transaction that is broadcasted to the entire network as well
 				amount:12.5,
 				sender:"00",
-				recepient:nodeAdress
+				recepient:nodeAddress
 			},
 			json: true,
 		};
@@ -100,13 +100,13 @@ app.post('/receive-new-block',function(req,res){
 		bitcoin.chain.push(newBlock);
 		bitcoin.pendingTransactions=[];
 		res.json({
-			note:'new block received and accepted';
-			newBlock : newBlock;
+			note:'new block received and accepted',
+			newBlock : newBlock
 		});
 	}else{//if new block is not legit
 		res.json({
-			note:'new block rejected';
-			newBlock:newBlock;
+			note:'new block rejected',
+			newBlock:newBlock
 		});
 	}
 });
@@ -157,7 +157,7 @@ app.post('/register-node',function(req,res){
 //this endpoint is only hit on the new node that we are registering on the network
 app.post('/register-nodes-bulk',function(req,res){
 	const allNetworkNodes = req.body.allNetworkNodes;//this is an array of all the network nodeUrls that are already in our blockchain network
-	allNetworkNodes.forEach(networkNodeUrl() => {
+	allNetworkNodes.forEach((networkNodeUrl) => {
 		const nodeNotAlreadyPresent = bitcoin.networkNodes.indexOf(networkNodeUrl) == -1;//if node not already present in the array
 		const notCurrentNode = bitcoin.currentNodeUrl !== networkNodeUrl;
 		if(nodeNotAlreadyPresent && notCurrentNode)
@@ -165,7 +165,54 @@ app.post('/register-nodes-bulk',function(req,res){
 			bitcoin.networkNodes.push(networkNodeUrl); //looping through all the urls in the array and registering it with the new node
 		}
 	});
-	res.json( note : 'Bulk register complete.')
+	res.json({ note : 'Bulk register complete.'});
+});
+
+//
+app.get('/consensus',function(req,res){
+	const requestPromises = [];
+	bitcoin.networkNodes.forEach(networkNodeUrl =>{
+		const requestOptions = {
+			uri:networkNodeUrl + '/blockchain',
+			method : 'GET',
+			json:true
+		};
+		requestPromises.push(rp(requestOptions));
+	});
+ 
+	/*blockchains present inside the 'then' is an array of all the other blockchains that are hosted on all the other nodes in our network*/
+	Promise.all(requestPromises)
+	.then(blockchains=>{
+		const currentChainLength = bitcoin.chain.length;
+		let maxChainLength = currentChainLength;
+		let newLongestChain = null;
+		let newPendingTransactions = null;
+
+		blockchains.forEach(blockchain => {
+			/*here we cycle through all the blockchains of the blockchains array that we get to check if there is any blockhchain in the network that is bigger than the blockchain hosted on our current node*/
+			if(blockchain.chain.length > maxChainLength){
+				maxChainLength = blockchain.chain.length;
+				newLongestChain = blockchain.chain;
+				newPendingTransactions = blockchain.pendingTransactions;
+			};
+		});
+
+		if(!newLongestChain || (newLongestChain && bitcoin.chainIsValid(newLongestChain))){
+			res.json({
+				note:'current chain has not been replaced',
+				chain : bitcoin.chain 
+			});
+		}
+		else if(newLongestChain && bitcoin.chainIsValid(newLongestChain)){
+			bitcoin.chain = newLongestChain;
+			bitcoin.pendingTransactions = newPendingTransactions;
+			res.json({
+				note:'this chain has been replaces',
+				chain:bitcoin.chain
+			});
+		}
+
+	});
 });
 
 
