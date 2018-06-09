@@ -1,12 +1,13 @@
 const sha256 = require('sha256');
 const currentNodeUrl = process.argv[3];//gives access to the current nodes url
+const uuid = require('uuid/v1');
 
 
 function Blockchain(){
 	this.chain = [];
 	this.pendingTransactions = [];
 	this.currentNodeUrl = currentNodeUrl;
-
+	this.networkNodes = [];
 	this.createNewBlock(100,'0','0');//this will be used to create our genesis block using arbitary parameters
 };
 
@@ -28,17 +29,23 @@ Blockchain.prototype.getLastBlock = function(first_argument) {
 	return this.chain[this.chain.length -1];
 }
 
+//takes in data and creates a new transaction, then simply returns the new transaction to uss
 Blockchain.prototype.createNewTransaction = function(amount, sender, recepient) {
 	const newTransaction = {
 		amount : amount,
 		sender : sender,
 		recepient :recepient
+		transactionId : uuid().split('-').join('')//gives a unique id for every new transaction that we make
 	};
 
-	this.pendingTransactions.push(newTransaction);//this add the newTransaction to the pendingTransactions array
-
-	return this.getLastBlock()['index']/*index of the last block in our chain*/ + 1;
+	return newTransaction;
 }
+
+//takes in a transactionobj thats already been created and add it to pending transaction, then returns the index of the block where this transaction will be added to 
+Blockchain.prototype.addTransactionToPendingTransactions= function(transactionObject){
+	this.pendingTransactions.push(transactionObject);
+	return this.getLastBlock()['index'] + 1;
+};
 
 Blockchain.prototype.hashBlock = function(previousBlockHash, currentBlockData, nonce) {
 	const dataAsString = previousBlockHash + nonce.toString() +JSON.stringify(currentBlockData);//taking all the passed in data concatenated into a single string
