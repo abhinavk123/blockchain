@@ -215,6 +215,38 @@ app.get('/consensus',function(req,res){
 	});
 });
 
+//we will send a blockHash and this will return the block to which the blockHash corrosponds to 
+app.get('/block/:blockHash',function(req,res){
+	const blockHash = req.params.blockHash;
+	const correctBlock = bitcoin.getBlock(blockHash);
+	res.json({
+		block : correctBlock
+	});
+});
+
+
+//we send the tId and get the trans. to which the Id corrosponds to 
+app.get('/transcation/:transactionId',function(req,res){
+	const transactionId = req.params.transactionId;
+	const transactionData = bitcoin.getTranscation(transactionId);
+	res.json({
+		transaction : transactionData.tarnscation,
+		block : transactionData.block
+	});
+});
+
+//we will send a specific address and get the transactions gone through this address + the num of bitcoins at this addr
+app.get('/address/:address',function(req,res){
+	const address = req.params.address;
+	const addressData = bitcoin.getAddressData(address);
+	res.json({
+		addressData : addressData
+	})
+});
+
+app.get('/bitcoin-data',function(req,res){
+	res.sendFile('./frontend/index.html',{root:__dirname});
+});
 
 
 app.listen(port,function(){

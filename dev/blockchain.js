@@ -93,4 +93,55 @@ Blockchain.prototype.chainIsValid = function(blockchain){
 	return validChain;
 };
 
+//go through the blockchain and get the block with the given blockHash
+Blockchain.prototype.getBlock = function(blockHash){
+	let correctBlock = null;
+	this.chain.forEach(block =>{
+		if(block.hash === blockHash) correctBlock = block;
+	});
+	return correctBlock;//either returns a block or a null value
+};
+
+Blockchain.prototype.getTransaction = function(transactionId){
+	let correctTransaction = null;
+	let correctBlock = null;
+	this.chain.forEach(block =>{
+		block.transcastions.forEach(transcastion =>{
+			if(transaction.transactionId === transcastionId){
+				correctTransaction = transaction;
+				correctBlock = block;
+			}
+		});
+	});
+	return {
+		transaction : correctTransaction,
+		block : correctBlock
+	};
+};
+
+
+Blockchain.prototype.getAddressData = function(address) {
+	const addressTransactions = [];//array that contains all the transactions that have this 'address' as either the sender or the recepient.
+	this.chain.forEach(block =>{
+		block.transactions.forEach(transaction =>{
+			if(transaction.sender === address || transaction.recepient === address)
+				addressTransactions.push(transaction);
+		});
+	});
+
+	let balance=0;//initailizing the balance associated with this address to zero
+
+	//we cycle thrugh all the transactions associated with this address
+	addressTransactions.forEach(transaction =>{
+		if(transaction.recepient === recepient) balance+=transaction.amount;
+		else if(transaction.sender === address) balance -= transaction.amount;
+	});
+
+	return{
+		addressTransactions:addressTransactions,
+		addressBalance : balance
+	};
+};
+
+
 module.exports = Blockchain;//exporting constructer function so it can be tested in test.js
