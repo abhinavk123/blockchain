@@ -39,6 +39,9 @@ app.post('/transaction/broadcast',function(req,res){
 	Promise.all(requestPromises)
 	.then(data=>{
 		res.json({note:'Transaction creation and broadcast successful'});
+	})
+	.catch(data=>{
+		res.json({note:'transcation cannot be completed due to some error'});
 	});
 });
 
@@ -87,6 +90,11 @@ app.get('/mine',function(req,res){
 			note:"New block mined & broadcast complete.",
 			block: newBlock
 		});
+	})
+	.catch(data =>{
+		res.json({
+			note:'block not mined due to error'
+		});
 	});
 });
 
@@ -112,7 +120,7 @@ app.post('/receive-new-block',function(req,res){
 });
 
 //register a node on its own server and broadcast that node to the whole network
-app.post('/register-and-breadcast-node',function(req,res){
+app.post('/register-and-broadcast-node',function(req,res){
 	const newNodeUrl = req.body.newNodeUrl;
 	if (bitcoin.networkNodes.indexOf(newNodeUrl)==-1) bitcoin.networkNodes.push(newNodeUrl);//if the new node is not already present, then add it to the network 
 
@@ -139,8 +147,9 @@ app.post('/register-and-breadcast-node',function(req,res){
 		};
 		return rp(bulkRegOptions)
 	}).
-	then(data =>{
-		res.json({node : 'New node registered with network'});
+	catch(data =>{
+		res.json({node:'New node cannot be registered'});
+		//res.json({node : 'New node registered with network'});
 	});
 });
 
@@ -212,6 +221,11 @@ app.get('/consensus',function(req,res){
 			});
 		}
 
+	})
+	.catch(blockchains =>{
+		res.json({
+			note:'error'
+		});
 	});
 });
 
